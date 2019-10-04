@@ -1,0 +1,95 @@
+---
+title: "p8105_hw3_xj2249"
+author: "xj2249"
+date: "2019/10/3"
+output: github_document
+---
+
+# Problem1
+## 1) 
+* Q: Short description of the dataset
+```{r, message = FALSE}
+library(p8105.datasets)
+library(tidyverse)
+data("instacart")
+# skimr::skim(instacart)
+instacart %>% 
+        dplyr::distinct(aisle) %>% 
+        nrow()
+```
+
+The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and giving illstrative examples of observations. 
+The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(instacart)` observations and `r ncol(instacart)` variables. There are `r instacart %>% dplyr::distinct(user_id) %>% nrow()` distinct  unique users and.
+
+## 2) 
+* How many aisles are there, and which aisles are the most items ordered from?
+
+```{r}
+instacart %>% 
+        dplyr::distinct(aisle_id) %>% 
+        nrow()
+
+instacart %>% 
+        group_by(aisle) %>% 
+        summarise(n = n()) %>% 
+        arrange(desc(n))
+```
+* There are 134 aisles and  "fresh vegetables" aisle is the top aisle that the most items were ordered from, with 150609 orders. 
+
+## 3) 
+* Q: Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+```{r,fig.height=6}
+instacart %>% 
+        group_by(aisle_id,aisle = aisle) %>% 
+        summarise(n = n()) %>% 
+        filter( n > 10000) %>% 
+        ungroup() %>% 
+        arrange(desc(n)) %>% 
+        mutate(name = factor(aisle,levels = aisle[order(n, decreasing = FALSE)])) %>% 
+        ggplot(aes(x = name, y = n)) +
+        geom_point() +
+        labs( title = "The number of items ordered in each aisle", x = "Product names" , y = "Number") +
+        ggrepel::geom_text_repel(aes(label = n),size = 1.5) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1),plot.title = element_text(hjust = 0.5))
+
+```
+
+## 4) 
+* Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+```{r}
+instacart %>% 
+        filter(aisle %in% c("baking ingredients",
+                            "dog food care",
+                            "packaged vegetables fruits"
+                            )
+               ) %>% 
+        select(product_name,aisle) %>% 
+        group_by(aisle,product_name) %>% 
+        summarise(n = n()) %>% 
+        arrange(desc(n)) %>% 
+        ungroup() %>% 
+        group_by(aisle) %>% 
+        top_n(3) %>% 
+        kableExtra::kable(caption = "Three most popular items",
+                          col.names = c("Aisles","Product","Number"))
+
+```
+
+## 5) 
+* Q:Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+```{r}
+instacart %>% 
+        filter(product_name %in% 
+                       c("Pink Lady Apples","Coffee Ice Cream")
+               ) %>% 
+        group_by(order_dow,product_name) %>% 
+        summarise(mean = mean(order_hour_of_day)) %>% 
+        pivot_wider(
+                names_from = product_name,
+                values_from = mean
+        ) %>% 
+        kableExtra::kable(caption = "Mean hour of the day when product are ordered in a week")
+```
+
+# Problem2
+
