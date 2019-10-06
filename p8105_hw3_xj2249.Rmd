@@ -23,7 +23,6 @@ The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(inst
 
 ## 2) 
 * How many aisles are there, and which aisles are the most items ordered from?
-
 ```{r}
 instacart %>% 
         dplyr::distinct(aisle_id) %>% 
@@ -91,5 +90,65 @@ instacart %>%
         kableExtra::kable(caption = "Mean hour of the day when product are ordered in a week")
 ```
 
-# Problem2
+# Problem2: wired！！！
+## 1) let's do some data cleaning!
+```{r}
+#data("brfss_smart2010") 
+#brfss_smart2010 %>% 
+# janitor::clean_names() %>% 
+ #       filter( topic == "Overall Health") %>% 
+  #      filter()
+```
+
+# Problem3
+## 1) Load, tidy, and otherwise wrangle the data
+```{r}
+accel <- 
+        read_csv("./data/accel_data.csv") %>% 
+        pivot_longer(
+                cols = starts_with("activity"),
+                names_to = "activity",
+                values_to = "count",
+                names_prefix = "activity."
+                ) %>% 
+        mutate( weekday_vs_weekend = case_when( 
+                                                day == "Saturday" ~ "weekend",
+                                                day == "Sunday" ~ "weekend",
+                                                TRUE ~ "weekday"
+                                                )
+                ) 
+```
+
+## 2) Total activity
+Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a  variable for each day, and create a table showing these totals. Are any trends apparent?
+```{r}
+accel %>% 
+        group_by(day_id) %>% 
+        summarise( total_activity = sum(count)) %>% 
+        kableExtra::kable(caption = "Total activity of each day")
+accel %>% 
+        group_by(day_id) %>% 
+        summarise( total_activity = sum(count)) %>% 
+        ggplot(aes(x = day_id, y = total_activity)) +
+        geom_point()
+```
+
+As the plot shows, there is no apparent trend here.
+
+
+## 3) 
+```{r}
+accel %>% 
+        ggplot(aes(x = as.numeric(activity) , y = count)) +
+        geom_line()
+
+accel %>% 
+        ggplot(aes(x = tmax, y = day_id)) + 
+  geom_density_ridges(scale = .85)
+
+```
+
+Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+
+
 
