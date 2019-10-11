@@ -6,149 +6,224 @@ output: github_document
 ---
 
 # Problem1
-## 1) 
-* Q: Short description of the dataset
+## 1)  Short description of the dataset
 ```{r, message = FALSE}
 library(p8105.datasets)
 library(tidyverse)
+library(kableExtra)
 data("instacart")
 # skimr::skim(instacart)
 instacart %>% 
-        dplyr::distinct(aisle) %>% 
-        nrow()
+  filter(user_id == "21") %>% 
+  kable()
+  
 ```
+* Size and structure: The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(instacart)` observations and `r ncol(instacart)` variables, of which four are character variables and others are numeric variables.
+* Key variables: `order_id`, `product_name`, `user_id`, `order_dow`, `order_hour_of_day`, `aisle`, etc.
+* Example: As showed in the table, for the customer with a `use_id` of 21, each row represents a product ordered by him/her at midday Monday. And mainly products were ordered from beverages and snacks departments.
 
-The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and giving illstrative examples of observations. 
-The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(instacart)` observations and `r ncol(instacart)` variables. There are `r instacart %>% dplyr::distinct(user_id) %>% nrow()` distinct  unique users and.
-
-## 2) 
-* How many aisles are there, and which aisles are the most items ordered from?
-```{r}
+## 2) Number of aisles and the most ordered one
+```{r, eval = FALSE}
+# number of aisles
 instacart %>% 
         dplyr::distinct(aisle_id) %>% 
         nrow()
 
+# find aisles are the most items ordered from.
+instacart %>% 
+  count(aisle) %>% 
+  top_n(1,n)
+```
+There are **134** aisles and  **"fresh vegetables"** aisle is the top aisle that the most items were ordered from, with 150609 orders. 
+
+## 3) A plot that shows the number of items ordered in each aisle
+```{r}
 instacart %>% 
         group_by(aisle) %>% 
         summarise(n = n()) %>% 
-        arrange(desc(n))
-```
-* There are 134 aisles and  "fresh vegetables" aisle is the top aisle that the most items were ordered from, with 150609 orders. 
-
-## 3) 
-* Q: Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
-```{r,fig.height=6}
-instacart %>% 
-        group_by(aisle_id,aisle = aisle) %>% 
-        summarise(n = n()) %>% 
         filter( n > 10000) %>% 
-        ungroup() %>% 
-        arrange(desc(n)) %>% 
-        mutate(name = factor(aisle,levels = aisle[order(n, decreasing = FALSE)])) %>% 
-        ggplot(aes(x = name, y = n)) +
-        geom_point() +
-        labs( title = "The number of items ordered in each aisle", x = "Product names" , y = "Number") +
-        ggrepel::geom_text_repel(aes(label = n),size = 1.5) +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1),plot.title = element_text(hjust = 0.5))
-
+        ggplot(aes(x = fct_reorder(aisle,n), y = n)) +
+        geom_col() +
+        labs( title = "The number of items ordered in each aisle", 
+              x = "Aisle" , 
+              y = "Number") +
+        coord_flip() +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        geom_text(aes(label = n),size = 2,hjust = 0) 
 ```
+    
+As the plot shows, fresh vegetables, fresh fruits and packaged vegetable fruits rank top 3. Well, people really love vegetables and fruits! COOL AND HEALTHY!
 
-## 4) 
-* Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+## 4) A table of three most popular items
 ```{r}
 instacart %>% 
         filter(aisle %in% c("baking ingredients",
                             "dog food care",
-                            "packaged vegetables fruits"
-                            )
-               ) %>% 
-        select(product_name,aisle) %>% 
+                            "packaged vegetables fruits")) %>% 
         group_by(aisle,product_name) %>% 
         summarise(n = n()) %>% 
         arrange(desc(n)) %>% 
-        ungroup() %>% 
-        group_by(aisle) %>% 
         top_n(3) %>% 
-        kableExtra::kable(caption = "Three most popular items",
-                          col.names = c("Aisles","Product","Number"))
-
+        kable(caption = "Three most popular items",
+              col.names = c("Aisles","Product","Number"))
 ```
 
-## 5) 
-* Q:Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+## 5)  Mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered
 ```{r}
 instacart %>% 
-        filter(product_name %in% 
-                       c("Pink Lady Apples","Coffee Ice Cream")
-               ) %>% 
+        filter(product_name %in% c("Pink Lady Apples",
+                                   "Coffee Ice Cream")) %>% 
         group_by(order_dow,product_name) %>% 
         summarise(mean = mean(order_hour_of_day)) %>% 
         pivot_wider(
-                names_from = product_name,
+                names_from = order_dow,
                 values_from = mean
-        ) %>% 
-        kableExtra::kable(caption = "Mean hour of the day when product are ordered in a week")
+                ) %>% 
+        rename("Sunday" = '0',
+               "Monday" = '1',
+               "Tuesday" = '2',
+               "Wednesday" = '3',
+               "Thursday" = '4',
+               "Friday" = '5',
+               "Saturday" = '6') %>% 
+        kable(caption = "Mean hour of the day when products are ordered in a week",digits = 0)
 ```
+As we can see,  Pink Lady Apples and Coffee Ice Cream are mainly ordered during the midday.
 
-# Problem2: wired！！！
+# Problem2: 
 ## 1) let's do some data cleaning!
 ```{r}
-#data("brfss_smart2010") 
-#brfss_smart2010 %>% 
-# janitor::clean_names() %>% 
- #       filter( topic == "Overall Health") %>% 
-  #      filter()
+data("brfss_smart2010") 
+brfss_health <-
+  brfss_smart2010 %>% 
+  janitor::clean_names() %>% 
+  rename( states = locationabbr,
+          locations = locationdesc) %>% 
+  filter( topic == "Overall Health") %>% 
+  filter( response %in% c("Poor","Fair","Good","Very good","Excellent")) %>% 
+  mutate( response = factor(response, levels = c("Poor","Fair","Good","Very good","Excellent")))
 ```
 
-# Problem3
-## 1) Load, tidy, and otherwise wrangle the data
+## 2) States that were observed at 7 or more locations
 ```{r}
+brfss_health %>% 
+  filter(year %in% c(2002,2010)) %>% 
+  group_by(year,states) %>% 
+  summarise(n = n_distinct(locations)) %>% 
+  filter(n >= 7) %>% 
+  arrange(year,n) %>% 
+  t() %>% 
+  kable(caption = "States observed at 7 or more locations")  
+  
+```
+In 2002, CT, FL, NC, MA, NJ and PA were  observed at 7 or more locations.  
+In 2010, CO, PA, SC, OH, MA, NY, NE, WA, CA, MD, NC, TX, NJ and FL were  observed at 7 or more locations.  
+
+## 3) Only "Excellent" dataset & "spaghetti" plot.
+```{r}
+brfss_excel <- 
+  brfss_health %>% 
+  filter(response == "Excellent") %>% 
+  group_by(states,year) %>% 
+  summarise( mean = mean(data_value,na.rm = TRUE))  
+
+brfss_excel %>% 
+  ggplot(aes(x = year , y = mean, color = states )) +
+  geom_line() + 
+  labs(x = "Year", 
+       y = "Average value", 
+       title = "Average value over time within a state") +
+  scale_color_hue( name = "State") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+  
+Wow, too many lines going on here. Seems most states experienced ups and downs from 2002 to 2010.
+
+## 4) Two-panel plot
+```{r}
+brfss_health %>% 
+        filter(year %in% c(2006,2010) & states == "NY") %>% 
+        ggplot(aes( x = response, y = data_value ,color = locations )) + 
+        geom_point(size = 0.5) +
+        geom_line(aes(group =  locations), alpha = 0.5) +
+        facet_grid(cols = vars(year)) + 
+        labs(y = "data value", title = "Distribution of data_value for responses in NY" ) +
+        facet_grid(cols = vars(year)) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
+
+
+brfss_health %>% 
+        filter(year %in% c(2006,2010) & states == "NY") %>% 
+        ggplot(aes( x = locations , y = data_value ,color = response )) + 
+        geom_point(size = 0.5) +
+        geom_line(aes(group =  response) , alpha = 0.5) +
+        facet_grid(cols = vars(year)) + 
+        labs(y = "data value", title = "Distribution of data_value for responses in NY" ) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
+```
+  
+Try to see it in two ways so I made two plots. Both plots shows that even in the same response group, the `data_value` varies among different locations. And "Poor" responses correspond two the lowest `data_value`.
+
+# Problem3
+## 1) Load, tidy, and  wrangle  data
+```{r, message = FALSE}
 accel <- 
         read_csv("./data/accel_data.csv") %>% 
+        janitor::clean_names() %>% 
         pivot_longer(
                 cols = starts_with("activity"),
-                names_to = "activity",
+                names_to = "activity_min",
                 values_to = "count",
                 names_prefix = "activity."
                 ) %>% 
-        mutate( weekday_vs_weekend = case_when( 
-                                                day == "Saturday" ~ "weekend",
+        mutate(weekday_vs_weekend = case_when( day == "Saturday" ~ "weekend",
                                                 day == "Sunday" ~ "weekend",
-                                                TRUE ~ "weekday"
-                                                )
-                ) 
+                                                TRUE ~ "weekday"),
+                day = factor(day, levels = c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"))
+               ) %>% 
+        arrange(week,day)
 ```
+The resulting dataset has `r nrow(accel)` observations and  `r ncol(accel)`variables, including `week`, `day_id`, `day`, `activity_min`, `count` and `weekday_vs_weekend`.
 
-## 2) Total activity
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a  variable for each day, and create a table showing these totals. Are any trends apparent?
+## 2) Total activity table 
 ```{r}
 accel %>% 
-        group_by(day_id) %>% 
-        summarise( total_activity = sum(count)) %>% 
-        kableExtra::kable(caption = "Total activity of each day")
-accel %>% 
-        group_by(day_id) %>% 
-        summarise( total_activity = sum(count)) %>% 
-        ggplot(aes(x = day_id, y = total_activity)) +
-        geom_point()
+  group_by(week,day) %>% 
+  summarise( total_activity = sum(count)) %>% 
+  t() %>% 
+  kable(caption = "Total activity of each day") 
+
 ```
+Since it's really hard to see trends in a table, let's make a dotplot.
 
-As the plot shows, there is no apparent trend here.
-
-
-## 3) 
 ```{r}
 accel %>% 
-        ggplot(aes(x = as.numeric(activity) , y = count)) +
-        geom_line()
-
-accel %>% 
-        ggplot(aes(x = tmax, y = day_id)) + 
-  geom_density_ridges(scale = .85)
-
+  group_by(week,day) %>% 
+  summarise( total_activity = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(day_id = 1:35) %>% 
+  ggplot(aes(x = day_id, y = total_activity, color = day)) +
+  geom_point()
 ```
+  
+As the plot shows, there is no apparent trend here.(As for me!)
 
-Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
-
-
+## 3) 24-hour activity 
+```{r}
+accel %>% 
+  ggplot(aes(x = as.numeric(activity_min), y = count, color = day )) +
+  geom_point(alpha = 0.21, size = 1) +
+  geom_line(alpha = 0.21) +
+  scale_x_continuous(breaks = seq(60,60*24,60), 
+                   labels = as.character(c(1:24))) +
+  labs(x = "Time in a day (hour)",
+       y = "Activity count",
+       title = "24-hour activity course of each day") + 
+  theme_minimal() +
+  theme(legend.title = element_blank(), 
+        legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5)) 
+```
+  
+REALLY REALLY...TOO MANY DOTS AND LINES! Basically, the 63 year-old male's activity started to increase from around 6 am (he may just get up at this time) and  several activity peaks can be seen around midday, 5pm and 21pm.  After 22pm, the activity goes down again.(Time to sleep!)
 
