@@ -63,9 +63,9 @@ instacart %>%
         group_by(aisle,product_name) %>% 
         summarise(n = n()) %>% 
         arrange(desc(n)) %>% 
-        top_n(3) %>% 
+        top_n(3) %>%       
         kable(caption = "Three most popular items",
-              col.names = c("Aisles","Product","Number"))
+              col.names = c("Aisles","Product","Number"))  
 ```
 
 ## 5)  Mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered
@@ -114,7 +114,8 @@ brfss_health %>%
   arrange(year,n) %>% 
   t() %>% 
   kable(caption = "States observed at 7 or more locations")  
-  
+# I use the transpose so that the table won't be to long, which looks kind of not good. Is there other ways that I can just flip the table? 
+
 ```
 In 2002, CT, FL, NC, MA, NJ and PA were  observed at 7 or more locations.  
 In 2010, CO, PA, SC, OH, MA, NY, NE, WA, CA, MD, NC, TX, NJ and FL were  observed at 7 or more locations.  
