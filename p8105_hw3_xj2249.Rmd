@@ -19,7 +19,7 @@ instacart %>%
   
 ```
 * Size and structure: The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(instacart)` observations and `r ncol(instacart)` variables, of which four are character variables and others are numeric variables.
-* Key variables: `order_id`, `product_name`, `user_id`, `order_dow`, `order_hour_of_day`, `aisle`, etc.
+* Key variables: `order_id`, `product_name`, `user_id`, `order_dow`, `order_hour_of_day`, `aisle` and etc.
 * Example: As showed in the table, for the customer with a `use_id` of 21, each row represents a product ordered by him/her at midday Monday. And mainly products were ordered from beverages and snacks departments.
 
 ## 2) Number of aisles and the most ordered one
@@ -29,7 +29,7 @@ instacart %>%
         dplyr::distinct(aisle_id) %>% 
         nrow()
 
-# find aisles are the most items ordered from.
+# find aisles that are the most items ordered from.
 instacart %>% 
   count(aisle) %>% 
   top_n(1,n)
