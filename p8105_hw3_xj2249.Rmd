@@ -10,12 +10,12 @@ output: github_document
 ```{r, message = FALSE}
 library(p8105.datasets)
 library(tidyverse)
-library(kableExtra)
+library(kableExtra) 
 data("instacart")
 # skimr::skim(instacart)
 instacart %>% 
   filter(user_id == "21") %>% 
-  kable()
+  kable(caption = "Purchase info of user '21' ") 
   
 ```
 * Size and structure: The "instacart" dataset has a `r dim(instacart)` dimensions, namely `r nrow(instacart)` observations and `r ncol(instacart)` variables, of which four are character variables and others are numeric variables.
